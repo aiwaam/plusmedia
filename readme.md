@@ -4,6 +4,7 @@
 
 You may need to create a DB Table
 
+<code>
 CREATE TABLE `fb_post` (
   `post_id` varchar(50) NOT NULL,
   `user_email` varchar(255) DEFAULT NULL,
@@ -11,5 +12,5 @@ CREATE TABLE `fb_post` (
   `issued` timestamp NULL DEFAULT CURRENT_TIMESTAMP,
   PRIMARY KEY (`post_id`)
 )
-
+</code>
 Please contact me randy.akj@gmail.com
