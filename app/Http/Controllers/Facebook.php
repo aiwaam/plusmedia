@@ -19,7 +19,7 @@ class Facebook extends Controller {
 		'default_graph_version' => self::APP_VERSION,
 		'persistent_data_handler'=>'session'
 	];
-	protected $fb_callback = "http://kyu.plusmedia.nz/fb-redirect";
+	protected $fb_callback = "http://kyu.randy.co.nz/fb-redirect";
 	protected $fb_access_token;
 
 	public function index() {
@@ -33,8 +33,8 @@ class Facebook extends Controller {
 			'email',
 			'user_location',
 			'user_birthday',
+			'user_posts ',
 			'publish_actions',
-			'public_profile',
 		];
 		$loginUrl = $helper->getLoginUrl($this->fb_callback, $permissions);
 		$assign['loginUrl'] = $loginUrl;
@@ -119,11 +119,11 @@ class Facebook extends Controller {
 		try {
 			$response = $fb->get('/me?fields=id,name,email,birthday', $this->fb_access_token);
 		} catch(\Facebook\Exceptions\FacebookResponseException $e) {
-			echo 'Graph returned an error: ' . $e->getMessage();
-			exit;
+			$assign['error'] = 'Graph returned an error: ' . $e->getMessage();
+			return view('dashboard',$assign);
 		} catch(\Facebook\Exceptions\FacebookSDKException $e) {
-			echo 'Facebook SDK returned an error: ' . $e->getMessage();
-			exit;
+			$assign['error'] = 'Facebook SDK returned an error: ' . $e->getMessage();
+			return view('dashboard',$assign);
 		}
 
 		$user = $response->getDecodedBody();
@@ -148,7 +148,6 @@ class Facebook extends Controller {
 		$validator = Validator::make($request->all(), [
 			"message"=>'required',
 		]);
-
 		if($validator->fails()) {
 			return redirect('dashboard')
 				->withInput()
@@ -165,13 +164,32 @@ class Facebook extends Controller {
 		];
 
 		try {
-			$response = $fb->post('/me/feed', $data, $this->fb_access_token);
+			$response = $fb->get('/me?fields=id,name,email,birthday', $this->fb_access_token);
 		} catch(\Facebook\Exceptions\FacebookResponseException $e) {
 			echo 'Graph returned an error: ' . $e->getMessage();
 			exit;
+			return redirect('dashboard')
+				->withInput()
+				->withErrors($e->getMessage());
 		} catch(\Facebook\Exceptions\FacebookSDKException $e) {
-			echo 'Facebook SDK returned an error: ' . $e->getMessage();
-			exit;
+			return redirect('dashboard')
+				->withInput()
+				->withErrors($e->getMessage());
+		}
+
+		$user = $response->getDecodedBody();
+		$assign['user'] = $user;
+
+		try {
+			$response = $fb->post('/me/feed', $data, $this->fb_access_token);
+		} catch(\Facebook\Exceptions\FacebookResponseException $e) {
+			return redirect('dashboard')
+				->withInput()
+				->withErrors($e->getMessage());
+		} catch(\Facebook\Exceptions\FacebookSDKException $e) {
+			return redirect('dashboard')
+				->withInput()
+				->withErrors($e->getMessage());
 		}
 		$result = [
 			"status"=>$response->getHttpStatusCode(),
@@ -180,20 +198,6 @@ class Facebook extends Controller {
 			'message'=>$request->message
 		];
 		$graphNode = $response->getGraphNode();
-
-		try {
-			$response = $fb->get('/me?fields=id,name,email,birthday', $this->fb_access_token);
-		} catch(\Facebook\Exceptions\FacebookResponseException $e) {
-			echo 'Graph returned an error: ' . $e->getMessage();
-			exit;
-		} catch(\Facebook\Exceptions\FacebookSDKException $e) {
-			echo 'Facebook SDK returned an error: ' . $e->getMessage();
-			exit;
-		}
-
-		$user = $response->getGraphUser();
-		$assign['user'] = $user;
-		$assign["fb_post_id"] = $graphNode['id'];
 
 		$params = [$graphNode['id'],$user['email'],json_encode($result)];
 		DB::insert("INSERT INTO fb_post SET post_id=?, user_email=?, response=?", $params);

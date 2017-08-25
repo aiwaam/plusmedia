@@ -6,7 +6,6 @@
 	<h1>Welcome {{$user['name']}}</h1>
 	<ul>
 		<li>email:  {{$user['email']}}</li>
-		<li>birthday  {{date("d/m/Y",strtotime($user['birthday']))}}</li>
 	</ul>
 	<div class="row">
 		<div class="col-md-6">
@@ -27,6 +26,12 @@
 		</div>
 		<div class="col-md-6">
 			<h2>Post Result</h2>
+			@if(!empty($error))
+				<div class="alert alert-danger">
+					{{$error}}
+				</div>
+			@endif
+			@if(!empty($posts))
 			<ul class="list-group">
 				@foreach($posts as $post)
 					<li class="list-group-item">
@@ -43,6 +48,7 @@
 					</li>
 				@endforeach
 			</ul>
+			@endif
 		</div>
 	</div>
 </div>
