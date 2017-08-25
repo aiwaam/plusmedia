@@ -19,7 +19,7 @@ class Facebook extends Controller {
 		'default_graph_version' => self::APP_VERSION,
 		'persistent_data_handler'=>'session'
 	];
-	protected $fb_callback = "http://kyu.randy.co.nz/fb-redirect";
+	protected $fb_callback = "http://kyu.plusmedia.nz/fb-redirect";
 	protected $fb_access_token;
 
 	public function index() {
